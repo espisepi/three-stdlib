@@ -1,7 +1,7 @@
 import { Vector3, Camera, Euler } from 'three';
 
-// const VELOCITY = 0.5;
-const VELOCITY = 100.0;
+const VELOCITY = 500.0;
+const VELOCITY_ROTATION = 0.01;
 
 class GodModeCameraControls {
   private camera: Camera;
@@ -17,6 +17,10 @@ class GodModeCameraControls {
     right: boolean;
     up: boolean;
     down: boolean;
+    rotateLeft: boolean;
+    rotateRight: boolean;
+    rotateUp: boolean;
+    rotateDown: boolean;
   };
 
   constructor(camera: Camera, domElement: HTMLElement) {
@@ -26,7 +30,7 @@ class GodModeCameraControls {
 
     // Variables de control
     this.movementSpeed = VELOCITY;
-    this.rotationSpeed = 0.002;
+    this.rotationSpeed = VELOCITY_ROTATION;
     this.velocity = new Vector3();
     this.direction = new Vector3();
 
@@ -37,6 +41,10 @@ class GodModeCameraControls {
       right: false,
       up: false,
       down: false,
+      rotateLeft: false,
+      rotateRight: false,
+      rotateUp: false,
+      rotateDown: false,
     };
 
     // Listeners para el teclado
@@ -64,11 +72,22 @@ class GodModeCameraControls {
       case 'ShiftLeft':
         this.keys.down = true;
         break;
+      case 'KeyJ':
+        this.keys.rotateLeft = true;
+        break;
+      case 'KeyL':
+        this.keys.rotateRight = true;
+        break;
+      case 'KeyI':
+        this.keys.rotateUp = true;
+        break;
+      case 'KeyK':
+        this.keys.rotateDown = true;
+        break;
     }
   }
 
   private onKeyUp(event: KeyboardEvent): void {
-    console.log(event.code);
     switch (event.code) {
       case 'KeyW':
         this.keys.forward = false;
@@ -88,6 +107,18 @@ class GodModeCameraControls {
       case 'ShiftLeft':
         this.keys.down = false;
         break;
+      case 'KeyJ':
+        this.keys.rotateLeft = false;
+        break;
+      case 'KeyL':
+        this.keys.rotateRight = false;
+        break;
+      case 'KeyI':
+        this.keys.rotateUp = false;
+        break;
+      case 'KeyK':
+        this.keys.rotateDown = false;
+        break;
     }
   }
 
@@ -100,7 +131,6 @@ class GodModeCameraControls {
     if (this.keys.right) this.direction.x += 1;
     if (this.keys.up) this.direction.y += 1;
     if (this.keys.down) this.direction.y -= 1;
-    // console.log(this.direction);
 
     this.direction.normalize();
     this.direction.applyQuaternion(this.camera.quaternion);
@@ -108,6 +138,16 @@ class GodModeCameraControls {
     this.velocity.copy(this.direction).multiplyScalar(this.movementSpeed * deltaTime);
 
     this.camera.position.add(this.velocity);
+
+    let deltaX = 0, deltaY = 0;
+    if (this.keys.rotateLeft) deltaX -= 1;
+    if (this.keys.rotateRight) deltaX += 1;
+    if (this.keys.rotateUp) deltaY -= 1;
+    if (this.keys.rotateDown) deltaY += 1;
+
+    if (deltaX !== 0 || deltaY !== 0) {
+      this.rotateCamera(deltaX * this.rotationSpeed, deltaY * this.rotationSpeed);
+    }
   }
 
   public rotateCamera(deltaX: number, deltaY: number): void {
@@ -115,8 +155,8 @@ class GodModeCameraControls {
 
     euler.setFromQuaternion(this.camera.quaternion);
 
-    euler.y -= deltaX * this.rotationSpeed;
-    euler.x -= deltaY * this.rotationSpeed;
+    euler.y -= deltaX;
+    euler.x -= deltaY;
 
     this.camera.quaternion.setFromEuler(euler);
   }
